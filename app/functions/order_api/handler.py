@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timezone
 import boto3
 from botocore.exceptions import ClientError
+import os
 
 
 def lambda_handler(event, context):
@@ -112,9 +113,12 @@ def lambda_handler(event, context):
     }
 
 
-session = boto3.Session(profile_name="ecr-lab")
-dynamodb = session.resource("dynamodb", region_name="ap-south-1")
-orders_table = dynamodb.Table("Orders")
+AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
+ORDERS_TABLE_NAME = os.getenv("ORDERS_TABLE_NAME", "Orders")
+
+dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
+
+orders_table = dynamodb.Table(ORDERS_TABLE_NAME)
 print("Connected to DynamoDB table:", orders_table.name)
 
 if __name__ == "__main__":
