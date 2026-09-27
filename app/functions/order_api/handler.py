@@ -109,6 +109,58 @@ def lambda_handler(event, context):
             })
         }
 
+    event_detail = {
+        "eventId": str(uuid.uuid4()),
+        "eventType": "OrderCreated",
+        "eventVersion": "1.0",
+        "occurredAt": created_at,
+        "data": {
+            "orderId": order_id,
+            "customerId": customer_id
+        }
+    }
+
+    print("Publishing OrderCreated event:")
+    print(json.dumps(event_detail, indent=4))
+
+    try:
+        event_response = events_client.put_events(
+            Entries=[
+                {
+                    "EventBusName": EVENT_BUS_NAME,
+                    "Source": "event-driven-order-platform.orders",
+                    "DetailType": "OrderCreated",
+                    "Detail": json.dumps(event_detail)
+                }
+            ]
+        )
+
+        if event_response.get("FailedEntryCount", 0) > 0:
+            print("EventBridge failed to publish event:")
+            print(event_response)
+
+            return {
+                "statusCode": 500,
+                "body": json.dumps({
+                    "error": "InternalServerError",
+                    "message": "Unable to publish order event"
+                })
+            }
+
+        print("OrderCreated event published successfully")
+
+    except ClientError as error:
+        print("EventBridge error:")
+        print(error)
+
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "error": "InternalServerError",
+                "message": "Unable to publish order event"
+            })
+        }
+
     return {
         "statusCode": 202,
         "body": json.dumps({
@@ -121,11 +173,18 @@ def lambda_handler(event, context):
 
 AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
 ORDERS_TABLE_NAME = os.getenv("ORDERS_TABLE_NAME", "Orders")
+EVENT_BUS_NAME = os.getenv(
+    "EVENT_BUS_NAME",
+    "EventDrivenOrderPlatform-Bus"
+)
 
 dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
+events_client = boto3.client("events", region_name=AWS_REGION)
 
 orders_table = dynamodb.Table(ORDERS_TABLE_NAME)
+
 print("Connected to DynamoDB table:", orders_table.name)
+print("Connected to EventBridge bus:", EVENT_BUS_NAME)
 
 ## Below code was used for local manual test for api 
 
