@@ -6,7 +6,13 @@ from botocore.exceptions import ClientError
 import os
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, context):  
+    # receive event from API Gateway
+    # parse event["body"]
+    # validate request
+    # create order
+    # write to DynamoDB
+    # return response  
     print("Received event:")
     print(event)
 
@@ -121,12 +127,14 @@ dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 orders_table = dynamodb.Table(ORDERS_TABLE_NAME)
 print("Connected to DynamoDB table:", orders_table.name)
 
-if __name__ == "__main__":
-    test_event = {
-        "body": '{"customerId":"CUST-001","items":[{"productId":"PROD-001","quantity":2}]}'
-    }
+## Below code was used for local manual test for api 
 
-    result = lambda_handler(test_event, None)
+# if __name__ == "__main__":
+#     test_event = {
+#         "body": '{"customerId":"CUST-001","items":[{"productId":"PROD-001","quantity":2}]}'
+#     }
 
-    print("Lambda response:")
-    print(result)
+#     result = lambda_handler(test_event, None)
+
+#     print("Lambda response:")
+#     print(result)
