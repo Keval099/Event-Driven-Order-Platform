@@ -125,14 +125,14 @@ def lambda_handler(event, context):
 
     try:
         event_response = events_client.put_events(
-            Entries=[
+        EventBusArn=EVENT_BUS_ARN,
+        Entries=[
                 {
-                    "EventBusName": EVENT_BUS_NAME,
                     "Source": "event-driven-order-platform.orders",
                     "DetailType": "OrderCreated",
                     "Detail": json.dumps(event_detail)
                 }
-            ]
+           ]
         )
 
         if event_response.get("FailedEntryCount", 0) > 0:
@@ -173,18 +173,18 @@ def lambda_handler(event, context):
 
 AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
 ORDERS_TABLE_NAME = os.getenv("ORDERS_TABLE_NAME", "Orders")
-EVENT_BUS_NAME = os.getenv(
-    "EVENT_BUS_NAME",
-    "EventDrivenOrderPlatform-Bus"
+EVENT_BUS_ARN = os.getenv(
+    "EVENT_BUS_ARN",
+    "arn:aws:events:ap-south-1:825765413460:event-busv2/EventDrivenOrderPlatform-Bus/8c0qtdadddnorjklb9kq1h7b"
 )
 
 dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
-events_client = boto3.client("events", region_name=AWS_REGION)
+events_client = boto3.client("eventbridgev2", region_name=AWS_REGION)
 
 orders_table = dynamodb.Table(ORDERS_TABLE_NAME)
 
 print("Connected to DynamoDB table:", orders_table.name)
-print("Connected to EventBridge bus:", EVENT_BUS_NAME)
+print("Connected to EventBridge bus:", EVENT_BUS_ARN)
 
 ## Below code was used for local manual test for api 
 
