@@ -213,14 +213,17 @@ CloudWatch OK
 
 ## Phase 7 — Idempotency and Duplicate Events
 
-- [ ] Use `eventId` as the idempotency identifier
-- [ ] Decide idempotency storage strategy
-- [ ] Prevent duplicate business processing
-- [ ] Test duplicate SQS delivery
-- [ ] Verify order state remains consistent
-- [ ] Document at-least-once delivery implications
+- [x] Use `eventId` as the idempotency identifier
+- [x] Decide idempotency storage strategy
+- [x] Create `ProcessedOrderEvents` DynamoDB table
+- [x] Add least-privilege access to the idempotency table
+- [x] Prevent duplicate business processing
+- [x] Test duplicate SQS delivery
+- [x] Verify order state remains consistent
+- [x] Document at-least-once delivery implications
+- [x] Verify duplicate event is skipped without re-running business logic
 
-**Status:** PLANNED
+**Status:** COMPLETE
 
 ---
 
@@ -370,7 +373,7 @@ Order Completed
 
 ## Phase 14 — Reliability Testing
 
-- [ ] Test duplicate message/event behavior
+- [x] Test duplicate message/event behavior
 - [x] Test Lambda failure
 - [x] Test SQS retry behavior
 - [x] Test DLQ behavior
@@ -379,9 +382,10 @@ Order Completed
 - [x] Verify recovered order reaches `COMPLETED`
 - [x] Verify DLQ returns to zero
 - [x] Verify CloudWatch alarm returns to `OK`
+- [x] Verify duplicate delivery does not re-run business logic
 - [x] Document observed behavior
 
-**Status:** IN PROGRESS — duplicate-event testing and Step Functions failure testing remain.
+**Status:** COMPLETE for the current SQS/Lambda reliability scope. Step Functions failure testing will be completed with the Step Functions milestone.
 
 ---
 
@@ -423,10 +427,11 @@ Order Completed
 - [ ] Terraform plan
 - [ ] GitHub Actions success
 - [ ] CloudWatch dashboard
-- [ ] Successful end-to-end order
-- [ ] Failure → retry → DLQ → recovery
+- [x] Successful end-to-end order
+- [x] Failure → retry → DLQ → recovery
+- [x] Duplicate event → idempotency check → skip
 
-**Status:** PLANNED
+**Status:** IN PROGRESS — evidence is being collected; remaining evidence covers Terraform, CI/CD, Step Functions, dashboards, and final portfolio packaging.
 
 ---
 
@@ -441,6 +446,8 @@ Order Completed
 - [x] Failed messages reach the DLQ
 - [x] CloudWatch detects the DLQ condition
 - [x] Failed orders can be recovered/reprocessed
+- [x] Duplicate events are detected using `eventId`
+- [x] Duplicate business processing is prevented
 - [ ] Step Functions demonstrates workflow orchestration
 - [x] Current Lambda workloads follow least privilege
 - [ ] Infrastructure is managed through Terraform
@@ -458,6 +465,6 @@ Order Completed
 
 **Serverless Architecture + Event-Driven Design + Asynchronous Processing + Reliability + Security + Infrastructure as Code + CI/CD + Observability**
 
-**Current milestone:** Core API → EventBridge V2 → SQS → Processor → DynamoDB flow is working, the successful `COMPLETED` lifecycle is verified, and the controlled failure → retry → DLQ → alarm → recovery path is also verified.
+**Current milestone:** Core API → EventBridge V2 → SQS → Processor → DynamoDB flow is working, the successful `COMPLETED` lifecycle is verified, the controlled failure → retry → DLQ → alarm → recovery path is verified, and duplicate-event handling with `eventId` idempotency is verified.
 
-**Next recommended stage:** Idempotency and duplicate-event handling using the existing `eventId`.
+**Next recommended stage:** Terraform / Infrastructure as Code.

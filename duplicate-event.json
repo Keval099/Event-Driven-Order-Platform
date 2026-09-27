@@ -1,0 +1,9 @@
+﻿{
+  "id": "671e6d40-76ae-46e9-b7a8-680e6c49baf6",
+  "detail": {
+    "data": {
+      "customerId": "CUST-IDEMPOTENCY-001",
+      "orderId": "ORD-25B42E5F086B"
+    }
+  }
+}

@@ -6,9 +6,17 @@ This project complements the completed Cloud Native Test Platform by focusing on
 
 ## Current Status
 
-**IN PROGRESS — Core event-driven processing path implemented and verified**
+**IN PROGRESS — Core event-driven processing, reliability, and idempotency implemented and verified**
 
 The main asynchronous order-processing path is now working end-to-end in AWS.
+
+
+The current reliability baseline is also verified:
+
+- Controlled Lambda failure → SQS retries → DLQ → CloudWatch alarm → recovery
+- `eventId`-based idempotency using the `ProcessedOrderEvents` DynamoDB table
+- Duplicate SQS delivery detected and skipped without re-running business logic
+- DLQ cleaned after testing and CloudWatch alarm returned to `OK`
 
 ### Completed and verified
 
@@ -58,7 +66,6 @@ The main asynchronous order-processing path is now working end-to-end in AWS.
 ### Not completed yet
 
 - `GET /orders/{order_id}`
-- Idempotency implementation using `eventId`
 - Step Functions workflow
 - Terraform infrastructure
 - CI/CD with GitHub Actions/OIDC
@@ -297,7 +304,7 @@ Build artifacts such as `lambda-package/`, `processor-package/`, `order-api.zip`
 |---|---|---|
 | API Gateway | Public order API | Implemented |
 | Lambda | Order API and asynchronous processing | Implemented |
-| DynamoDB | Order persistence and lifecycle state | Implemented |
+| DynamoDB | Order persistence, lifecycle state, and idempotency tracking | Implemented |
 | EventBridge V2 | Event routing | Implemented |
 | SQS | Asynchronous buffering and retries | Implemented |
 | SQS DLQ | Failed-message isolation | Implemented and failure/recovery verified |
@@ -326,6 +333,9 @@ Current permissions include:
 - `sqs:DeleteMessage`
 - `sqs:GetQueueAttributes`
 - `dynamodb:UpdateItem` on the `Orders` table
+- `dynamodb:GetItem` on the `ProcessedOrderEvents` table
+- `dynamodb:PutItem` on the `ProcessedOrderEvents` table
+- `dynamodb:UpdateItem` on the `ProcessedOrderEvents` table
 
 Broad service permissions such as `sqs:*`, `dynamodb:*`, or `events:*` are intentionally avoided.
 
@@ -369,6 +379,7 @@ Planned evidence includes:
 - CI/CD execution
 - CloudWatch logs, metrics, and alarms
 - End-to-end order processing
+- Idempotency/duplicate-event test evidence
 
 ## Verified Reliability Test
 
@@ -414,6 +425,10 @@ Verified evidence now includes:
 - `PROCESSING → COMPLETED` recovery
 - DLQ returning to `0`
 - CloudWatch alarm returning to `OK`
+- `ProcessedOrderEvents` table with `eventId` tracking
+- Duplicate SQS delivery test
+- Duplicate event detected and skipped without re-running business logic
+- Original order remained `COMPLETED` after duplicate delivery
 
 Still planned:
 
@@ -425,6 +440,34 @@ Still planned:
 - Final portfolio evidence package
 - Final documentation and lessons learned
 
+## Verified Idempotency Test
+
+The duplicate-event path has now been deliberately tested in AWS.
+
+```text
+Original OrderCreated event
+        ↓
+SQS → Order Processor
+        ↓
+eventId stored in ProcessedOrderEvents
+        ↓
+Order processed → COMPLETED
+
+Same eventId delivered again
+        ↓
+Conditional PutItem detects existing eventId
+        ↓
+Duplicate event detected
+        ↓
+Business processing skipped
+        ↓
+Order remains COMPLETED
+```
+
+The test demonstrates the at-least-once delivery implication of SQS and prevents the same event from executing the order-processing business logic twice.
+
 ## Next Stage
 
-The next engineering milestone is **idempotency and duplicate-event handling** using the existing versioned `eventId`.
+The next engineering milestone is **Infrastructure as Code with Terraform**.
+
+Before Terraform implementation, the current AWS-built resources and verified behavior should be preserved as the baseline for the infrastructure code.
