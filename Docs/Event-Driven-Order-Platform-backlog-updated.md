@@ -4,22 +4,18 @@
 
 Build a production-style AWS serverless order-processing platform demonstrating event-driven architecture, asynchronous processing, reliability, least-privilege IAM, infrastructure as code, CI/CD, observability, and failure recovery.
 
-This project should complement the Cloud Native Test Platform rather than repeat its Kubernetes-focused architecture.
-
 ---
 
 ## Phase 0 — Project Foundation
 
-- [x] Create GitHub repository: `event-driven-order-platform`
+- [x] Create GitHub repository
 - [x] Create initial repository structure
-- [x] Add `README.md`
-- [x] Add `Docs/backlog.md`
+- [x] Add README
+- [x] Add backlog
 - [x] Add `.gitignore`
-- [x] Add project architecture overview
+- [x] Add architecture documentation
 - [x] Define AWS region and naming convention
-- [x] Create initial feature branch and PR workflow
-
-**Acceptance:** Repository is clean, documented, and the backlog is committed.
+- [x] Create initial branch and PR workflow
 
 **Status:** COMPLETE
 
@@ -30,7 +26,7 @@ This project should complement the Cloud Native Test Platform rather than repeat
 ### Order API
 
 - [x] Define `POST /orders`
-- [ ] Define `GET /orders/{order_id}` — planned
+- [ ] Define `GET /orders/{order_id}`
 - [x] Define order request/response schemas
 - [x] Generate unique order IDs
 - [x] Define order states: `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`
@@ -45,37 +41,33 @@ This project should complement the Cloud Native Test Platform rather than repeat
 - [x] Document `OrderCreated` event contract
 - [x] Document Lambda application structure
 
-**Acceptance:** API contract, order lifecycle, event contract, and application structure are documented.
-
 **Status:** COMPLETE
 
 ---
 
 ## Phase 2 — Serverless Order API
 
-### Lambda — Local Implementation
+### Lambda
 
 - [x] Create Order API Lambda handler
-- [x] Simulate an API Gateway event locally
+- [x] Simulate API Gateway event locally
 - [x] Parse JSON request body
-- [x] Validate `customerId`
-- [x] Validate `items`
-- [x] Validate `productId`
-- [x] Validate `quantity`
+- [x] Validate request
 - [x] Generate backend order ID
-- [x] Generate UTC creation timestamp
-- [x] Create order with `PENDING` status
+- [x] Generate UTC timestamp
+- [x] Create `PENDING` order
 - [x] Return `202 Accepted`
-- [x] Handle DynamoDB client errors
+- [x] Handle DynamoDB errors
 
 ### API Gateway / AWS Deployment
 
-- [ ] Create API endpoint
-- [ ] Configure `POST /orders`
-- [ ] Configure Lambda integration
-- [ ] Deploy Lambda to AWS
-- [ ] Configure Lambda environment variables
-- [ ] Test deployed API
+- [x] Create API endpoint
+- [x] Configure `POST /orders`
+- [x] Configure Lambda proxy integration
+- [x] Deploy Order API Lambda
+- [x] Configure Lambda environment variables
+- [x] Deploy `dev` stage
+- [x] Test deployed API with real HTTP request
 
 ### Remaining Application Work
 
@@ -83,178 +75,128 @@ This project should complement the Cloud Native Test Platform rather than repeat
 - [ ] Add structured logging
 - [ ] Add unit tests
 
-**Acceptance:** A deployed API can create and retrieve orders.
-
-**Status:** IN PROGRESS
+**Status:** COMPLETE for `POST /orders`; remaining GET/tests pending.
 
 ---
 
 ## Phase 3 — DynamoDB
 
 - [x] Create `Orders` table
-- [x] Define `orderId` as the partition key
+- [x] Define `orderId` as partition key
 - [x] Define `orderId` as String
 - [x] Define order attributes
 - [x] Configure on-demand capacity
-- [x] Use the DynamoDB Standard table class
-- [ ] Explicitly review/verify encryption configuration
 - [x] Implement order persistence
 - [ ] Implement order retrieval
 - [x] Add DynamoDB error handling
-- [ ] Add dedicated least-privilege IAM permissions for the application workload
+- [x] Configure least-privilege DynamoDB permissions
 - [x] Test Python → boto3 → DynamoDB
-- [x] Verify application-generated orders in DynamoDB
+- [x] Verify application-generated orders
+- [ ] Explicitly review/verify encryption configuration
 
-**Current verified path:**
-
-```text
-Local Order API
-      ↓
-boto3
-      ↓
-DynamoDB Orders
-      ↓
-PutItem
-      ↓
-Order persisted
-```
-
-**Acceptance:** Orders are persisted and retrievable.
-
-**Status:** IN PROGRESS
-
-📸 **SCREENSHOT LATER — DynamoDB table and application-generated order**
+**Status:** IN PROGRESS — retrieval and final security review remain.
 
 ---
 
 ## Phase 4 — Event-Driven Architecture
 
-### EventBridge
+### EventBridge V2
 
 - [x] Define `OrderCreated` event
 - [x] Define event schema/version
-- [ ] Create event bus/rule
-- [ ] Configure event target
-- [ ] Publish event after successful order creation
-- [ ] Test event delivery
+- [x] Create custom EventBridge V2 event bus
+- [x] Configure EventBridge V2 subscriber
+- [x] Configure SQS target
+- [x] Configure event filtering
+- [x] Grant least-privilege `events:PutEvents`
+- [x] Publish event after successful order creation
+- [x] Test event delivery
 
-Example:
+**Verified flow:**
 
-```json
-{
-  "eventId": "evt-123456",
-  "eventType": "OrderCreated",
-  "eventVersion": "1.0",
-  "occurredAt": "2026-09-25T10:30:00Z",
-  "data": {
-    "orderId": "ORD-12345",
-    "customerId": "CUST-001"
-  }
-}
+```text
+Order API Lambda
+      ↓
+EventBridge V2
+      ↓
+OrderQueue
 ```
 
-**Acceptance:** Creating an order produces an `OrderCreated` event that is routed by EventBridge.
-
-📸 **SCREENSHOT LATER — EventBridge rule and target**
+**Status:** COMPLETE
 
 ---
 
 ## Phase 5 — Asynchronous Processing with SQS
 
-- [ ] Create order-processing SQS queue
-- [ ] Configure visibility timeout
-- [ ] Create dead-letter queue
-- [ ] Configure redrive policy
-- [ ] Connect EventBridge to SQS
-- [ ] Create processing Lambda
-- [ ] Configure SQS → Lambda event source mapping
-- [ ] Update order to `PROCESSING`
-- [ ] Update order to `COMPLETED`
-- [ ] Add processing error handling
+- [x] Create order-processing SQS queue
+- [x] Configure SQS dead-letter queue
+- [x] Configure redrive policy
+- [x] Configure maximum receives = 3
+- [x] Connect EventBridge V2 to SQS
+- [x] Create Order Processor Lambda
+- [x] Configure SQS → Lambda event source mapping
+- [x] Parse SQS/EventBridge message
+- [x] Update order to `PROCESSING`
+- [x] Update order to `COMPLETED`
+- [x] Verify successful end-to-end processing
+- [ ] Add controlled processing failure test
 
-Target flow:
+**Verified flow:**
 
 ```text
 POST /orders
      ↓
+API Gateway
+     ↓
 Order API Lambda
      ↓
-DynamoDB
+DynamoDB — PENDING
      ↓
-EventBridge
+EventBridge V2
      ↓
 SQS
      ↓
 Order Processor Lambda
      ↓
-DynamoDB
+DynamoDB — PROCESSING
+     ↓
+DynamoDB — COMPLETED
 ```
 
-**Acceptance:** Order processing is asynchronous and successful messages are processed automatically.
-
-📸 **SCREENSHOT LATER — SQS queue and processing**
+**Status:** COMPLETE for successful processing; failure testing remains.
 
 ---
 
 ## Phase 6 — DLQ & Failure Recovery
 
-This is a core learning objective.
-
 - [ ] Implement intentional failure condition for testing
-- [ ] Configure SQS retries
+- [x] Configure SQS retries through redrive policy
 - [ ] Verify failed messages are retried
-- [ ] Verify messages reach DLQ
+- [ ] Verify message reaches DLQ after maximum receives
 - [ ] Create CloudWatch alarm for DLQ messages
 - [ ] Fix the processing failure
 - [ ] Replay/reprocess the failed message
-- [ ] Verify order reaches `COMPLETED`
-- [ ] Document the failure and recovery sequence
+- [ ] Verify recovered order reaches `COMPLETED`
+- [ ] Document failure and recovery sequence
 
-Failure demonstration:
-
-```text
-OrderCreated
-     ↓
-SQS
-     ↓
-Processing Lambda ❌
-     ↓
-Retry
-     ↓
-Retry
-     ↓
-Retry
-     ↓
-DLQ
-     ↓
-CloudWatch Alarm
-```
-
-Recovery:
-
-```text
-Fix processor
-     ↓
-Replay message
-     ↓
-Processing Lambda
-     ↓
-DynamoDB
-     ↓
-COMPLETED
-```
-
-📸 **SCREENSHOT LATER — Failed message in DLQ**
-
-📸 **SCREENSHOT LATER — CloudWatch DLQ alarm**
-
-📸 **SCREENSHOT LATER — Recovered order**
+**Status:** NEXT
 
 ---
 
-## Phase 7 — Step Functions
+## Phase 7 — Idempotency and Duplicate Events
 
-Use Step Functions for a focused order workflow.
+- [ ] Use `eventId` as the idempotency identifier
+- [ ] Decide idempotency storage strategy
+- [ ] Prevent duplicate business processing
+- [ ] Test duplicate SQS delivery
+- [ ] Verify order state remains consistent
+- [ ] Document at-least-once delivery implications
+
+**Status:** PLANNED
+
+---
+
+## Phase 8 — Step Functions
 
 - [ ] Define workflow
 - [ ] Add validation state
@@ -266,7 +208,7 @@ Use Step Functions for a focused order workflow.
 - [ ] Update order status
 - [ ] Document state machine
 
-Target workflow:
+Target:
 
 ```text
 Validate Order
@@ -280,51 +222,36 @@ Update Order
 Order Completed
 ```
 
-Failure:
-
-```text
-Process Payment
-      ↓
-FAILED
-      ↓
-Cancel Order
-```
-
-**Acceptance:** Both successful and failure executions can be demonstrated.
-
-📸 **SCREENSHOT LATER — Successful Step Functions execution**
-
-📸 **SCREENSHOT LATER — Failure/recovery execution**
+**Status:** PLANNED
 
 ---
 
-## Phase 8 — IAM & Security
+## Phase 9 — IAM & Security
 
-- [ ] Create dedicated IAM roles for Lambda functions
-- [ ] Apply least-privilege permissions
-- [ ] Restrict DynamoDB access
-- [ ] Restrict SQS access
-- [ ] Restrict EventBridge permissions
+- [x] Create dedicated IAM role for Order API Lambda
+- [x] Create dedicated IAM role for Order Processor Lambda
+- [x] Restrict DynamoDB access
+- [x] Restrict SQS access
+- [x] Restrict EventBridge permissions
 - [ ] Restrict Step Functions permissions
-- [x] Avoid hard-coded AWS credentials in application code
+- [x] Avoid hard-coded AWS credentials
 - [ ] Use GitHub OIDC for CI/CD
-- [ ] Review IAM policies
+- [ ] Review all IAM policies
 - [ ] Document security decisions
+- [ ] Review DynamoDB encryption configuration
 
-**Acceptance:** No static AWS credentials are stored in GitHub and workloads have only required permissions.
-
-📸 **SCREENSHOT LATER — IAM role/policy evidence**
+**Status:** IN PROGRESS
 
 ---
 
-## Phase 9 — Terraform / Infrastructure as Code
+## Phase 10 — Terraform / Infrastructure as Code
 
 - [ ] Configure AWS provider
 - [ ] Configure variables and outputs
 - [ ] Create DynamoDB resources
 - [ ] Create Lambda resources
 - [ ] Create API Gateway resources
-- [ ] Create EventBridge resources
+- [ ] Create EventBridge V2 resources
 - [ ] Create SQS/DLQ resources
 - [ ] Create Step Functions resources
 - [ ] Create IAM roles/policies
@@ -334,13 +261,11 @@ Cancel Order
 - [ ] Run final `terraform plan`
 - [ ] Document infrastructure
 
-**Acceptance:** Core infrastructure is reproducible through Terraform.
-
-📸 **SCREENSHOT LATER — Final Terraform plan**
+**Status:** PLANNED
 
 ---
 
-## Phase 10 — CI/CD
+## Phase 11 — CI/CD
 
 ### Pull Request
 
@@ -357,40 +282,18 @@ Cancel Order
 - [ ] Run tests
 - [ ] Validate Terraform
 - [ ] Authenticate to AWS using OIDC
-- [ ] Deploy application/infrastructure
+- [ ] Deploy infrastructure/application
 - [ ] Run API smoke tests
 - [ ] Report deployment status
 
-Target:
-
-```text
-Git Push
-   ↓
-GitHub Actions
-   ↓
-Tests
-   ↓
-Terraform Validation
-   ↓
-AWS OIDC
-   ↓
-Deployment
-   ↓
-Smoke Test
-```
-
-**Acceptance:** PR validation and main-branch deployment are automated without static AWS credentials.
-
-📸 **SCREENSHOT LATER — Successful GitHub Actions pipeline**
+**Status:** PLANNED
 
 ---
 
-## Phase 11 — Observability
+## Phase 12 — Observability
 
-Use CloudWatch to monitor the serverless system.
-
-- [ ] Configure Lambda logging
-- [ ] Review API Gateway metrics/logs
+- [x] Verify Lambda logging
+- [x] Review API/processor CloudWatch logs
 - [ ] Monitor Lambda errors
 - [ ] Monitor Lambda duration
 - [ ] Monitor SQS messages
@@ -401,27 +304,11 @@ Use CloudWatch to monitor the serverless system.
 - [ ] Create API failure alarm where appropriate
 - [ ] Document operational signals
 
-Dashboard targets:
-
-```text
-Orders Created
-Orders Completed
-Lambda Errors
-Lambda Duration
-SQS Messages
-DLQ Messages
-API Errors
-```
-
-📸 **SCREENSHOT LATER — CloudWatch dashboard**
-
-📸 **SCREENSHOT LATER — CloudWatch application logs**
-
-📸 **SCREENSHOT LATER — CloudWatch alarms**
+**Status:** IN PROGRESS
 
 ---
 
-## Phase 12 — Testing
+## Phase 13 — Testing
 
 ### Unit Tests
 
@@ -434,26 +321,26 @@ API Errors
 
 ### Integration Tests
 
-- [ ] API → Lambda
+- [x] API → Lambda
 - [x] Lambda → DynamoDB
-- [ ] EventBridge → SQS
-- [ ] SQS → Lambda
-- [ ] Processing → DynamoDB
+- [x] EventBridge V2 → SQS
+- [x] SQS → Lambda
+- [x] Processing → DynamoDB
 
 ### End-to-End Test
 
-- [ ] Create order
+- [x] Create order
 - [x] Verify DynamoDB record
-- [ ] Verify event
-- [ ] Verify SQS processing
-- [ ] Verify final status
-- [ ] Verify CloudWatch logs
+- [x] Verify event delivery
+- [x] Verify SQS processing
+- [x] Verify final `COMPLETED` status
+- [x] Verify CloudWatch processor logs
 
-**Acceptance:** A complete order travels automatically from API request to `COMPLETED`.
+**Status:** IN PROGRESS — automated tests remain.
 
 ---
 
-## Phase 13 — Reliability Testing
+## Phase 14 — Reliability Testing
 
 - [ ] Test duplicate message/event behavior
 - [ ] Test Lambda failure
@@ -464,17 +351,19 @@ API Errors
 - [ ] Verify data remains consistent
 - [ ] Document observed behavior
 
+**Status:** NEXT after DLQ implementation test.
+
 ---
 
-## Phase 14 — Documentation
+## Phase 15 — Documentation
 
 - [ ] Final README
 - [x] Architecture documentation
-- [x] AWS service explanation in working documentation
+- [x] AWS service explanation
 - [x] Event flow explanation
 - [x] Order lifecycle documentation
 - [ ] Failure/recovery diagram
-- [ ] IAM/security explanation
+- [x] IAM/security explanation started
 - [ ] Terraform explanation
 - [ ] CI/CD explanation
 - [ ] Observability explanation
@@ -484,65 +373,60 @@ API Errors
 - [ ] Lessons learned
 - [ ] Known limitations
 
+**Status:** IN PROGRESS
+
 ---
 
-## Phase 15 — Portfolio Evidence
-
-Collect only evidence that proves an engineering outcome.
+## Phase 16 — Portfolio Evidence
 
 - [ ] Architecture diagram
 - [ ] API request/response
 - [ ] DynamoDB order
-- [ ] EventBridge rule
+- [ ] EventBridge V2 routing
 - [ ] SQS queue
+- [ ] Order Processor logs
 - [ ] DLQ failure
+- [ ] CloudWatch alarm
 - [ ] Step Functions workflow
 - [ ] IAM least-privilege evidence
 - [ ] Terraform plan
 - [ ] GitHub Actions success
 - [ ] CloudWatch dashboard
-- [ ] CloudWatch alarms
 - [ ] Successful end-to-end order
 - [ ] Failure → retry → DLQ → recovery
 
-### Evidence Rule
-
-Screenshots are intentionally collected later, after meaningful milestones. Every screenshot should prove an engineering outcome rather than simply showing an AWS console page.
+**Status:** PLANNED
 
 ---
 
 # Final Definition of Done
 
-- [ ] Client can create an order through the API
+- [x] Client can create an order through the API
 - [x] Orders are stored in DynamoDB
-- [ ] `OrderCreated` events are published
-- [ ] Events are processed asynchronously through SQS
-- [ ] Processing updates order state
-- [ ] Failed messages are retried
+- [x] `OrderCreated` events are published
+- [x] Events are processed asynchronously through SQS
+- [x] Processing updates order state
+- [ ] Failed messages are retried and verified
 - [ ] Failed messages reach the DLQ
 - [ ] CloudWatch detects the DLQ condition
 - [ ] Failed orders can be recovered/reprocessed
 - [ ] Step Functions demonstrates workflow orchestration
-- [ ] IAM follows least privilege
+- [x] Current Lambda workloads follow least privilege
 - [ ] Infrastructure is managed through Terraform
 - [ ] CI/CD is automated through GitHub Actions
 - [ ] GitHub uses OIDC instead of static AWS credentials
-- [ ] CloudWatch provides logs, metrics, and alarms
-- [ ] Unit, integration, and end-to-end tests pass
+- [ ] CloudWatch provides dashboards, metrics, and alarms
+- [ ] Automated unit, integration, and end-to-end tests pass
 - [ ] Failure scenarios have been deliberately tested
 - [x] README and architecture documentation are being maintained
 - [ ] Portfolio evidence has been collected
 
 ---
 
-## Final Project Outcome
+## Current Project Outcome
 
 **Serverless Architecture + Event-Driven Design + Asynchronous Processing + Reliability + Security + Infrastructure as Code + CI/CD + Observability**
 
-## Current Status
+**Current milestone:** Core API → EventBridge V2 → SQS → Processor → DynamoDB flow is working and the successful `COMPLETED` lifecycle has been verified.
 
-**IN PROGRESS — Phase 2 / Phase 3**
-
-### Next recommended stage
-
-**Deploy the Order API Lambda to AWS, then connect API Gateway.**
+**Next recommended stage:** Controlled processor failure → SQS retries → DLQ → CloudWatch alarm → recovery.
