@@ -23,4 +23,6 @@ dist/
 
 # Lambda build artifacts
 lambda-package/
+processor-package/
 order-api.zip
+order-processor.zip
