@@ -20,3 +20,7 @@ venv/
 # Build artifacts
 build/
 dist/
+
+# Lambda build artifacts
+lambda-package/
+order-api.zip
