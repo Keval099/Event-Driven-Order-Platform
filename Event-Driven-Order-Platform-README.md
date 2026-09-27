@@ -45,15 +45,19 @@ The main asynchronous order-processing path is now working end-to-end in AWS.
 - Successful end-to-end order processing verified in DynamoDB
 - `boto3==1.43.102` pinned for Lambda packaging
 - Lambda deployment artifacts excluded from Git
+- Controlled processor failure test using `CUST-FAIL-TEST`
+- SQS retry behavior verified with receive counts `1 → 2 → 3`
+- Failed message verified in the SQS DLQ
+- CloudWatch DLQ alarm verified transitioning to `ALARM`
+- Failed processor code restored and redeployed
+- DLQ message redriven to the source queue
+- Failed order successfully recovered to `COMPLETED`
+- DLQ verified empty after recovery
+- CloudWatch DLQ alarm verified returning to `OK`
 
 ### Not completed yet
 
 - `GET /orders/{order_id}`
-- Controlled Lambda failure test
-- SQS retry verification
-- DLQ failure verification
-- DLQ CloudWatch alarm
-- Failed-message recovery/replay
 - Idempotency implementation using `eventId`
 - Step Functions workflow
 - Terraform infrastructure
@@ -146,15 +150,25 @@ PROCESSING
 COMPLETED
 ```
 
-Planned failure path:
+Failure/recovery path verified in AWS:
 
 ```text
 PENDING
    ↓
+Processor failure
+   ↓
+SQS retries
+   ↓
+DLQ
+   ↓
+Redrive
+   ↓
 PROCESSING
    ↓
-FAILED
+COMPLETED
 ```
+
+The controlled failure test intentionally failed before the `PENDING → PROCESSING` update, so the failed test order remained `PENDING` until it was redriven and successfully processed.
 
 `PENDING` means the order has been accepted and persisted but asynchronous processing has not completed.
 
@@ -286,9 +300,9 @@ Build artifacts such as `lambda-package/`, `processor-package/`, `order-api.zip`
 | DynamoDB | Order persistence and lifecycle state | Implemented |
 | EventBridge V2 | Event routing | Implemented |
 | SQS | Asynchronous buffering and retries | Implemented |
-| SQS DLQ | Failed-message isolation | Configured; failure test pending |
+| SQS DLQ | Failed-message isolation | Implemented and failure/recovery verified |
 | IAM | Least-privilege workload permissions | Implemented for current Lambdas |
-| CloudWatch | Logs and operational visibility | Logs verified; alarms/dashboard pending |
+| CloudWatch | Logs and operational visibility | Logs and DLQ alarm verified; dashboard pending |
 | Step Functions | Workflow orchestration | Planned |
 | Terraform | Infrastructure as Code | Planned |
 | GitHub Actions | CI/CD | Planned |
@@ -356,22 +370,61 @@ Planned evidence includes:
 - CloudWatch logs, metrics, and alarms
 - End-to-end order processing
 
-## Next Stage
+## Verified Reliability Test
 
-The next reliability milestone is to deliberately fail a controlled order-processing message and verify:
+The failure and recovery path has now been deliberately tested in AWS.
 
 ```text
-Processor failure
+CUST-FAIL-TEST
       ↓
-SQS retries
+Processor Lambda intentionally fails
       ↓
-3 receives
+SQS receive count: 1 → 2 → 3
       ↓
 DLQ
       ↓
-CloudWatch alarm
+CloudWatch alarm → ALARM
       ↓
-Recovery / replay
+Failure condition removed and processor redeployed
+      ↓
+DLQ redrive
+      ↓
+PROCESSING → COMPLETED
+      ↓
+DLQ = 0
+      ↓
+CloudWatch alarm → OK
 ```
 
-After that, the project will continue with idempotency, Step Functions, Terraform, CI/CD, observability, and automated testing.
+This demonstrates controlled failure, SQS retry behavior, DLQ isolation, operational alerting, and recovery/replay.
+
+## Evidence
+
+Verified evidence now includes:
+
+- API request/response
+- DynamoDB `PENDING` order
+- EventBridge V2 event routing
+- SQS delivery
+- Order Processor failure logs
+- SQS receive counts `1 → 2 → 3`
+- DLQ containing the failed message
+- CloudWatch DLQ alarm in `ALARM`
+- Successful redrive/recovery
+- `PROCESSING → COMPLETED` recovery
+- DLQ returning to `0`
+- CloudWatch alarm returning to `OK`
+
+Still planned:
+
+- Step Functions execution
+- IAM permissions evidence
+- Terraform plan
+- CI/CD execution
+- CloudWatch dashboard
+- Final portfolio evidence package
+- Final documentation and lessons learned
+
+## Next Stage
+
+The next engineering milestone is **idempotency and duplicate-event handling** using the existing versioned `eventId`.

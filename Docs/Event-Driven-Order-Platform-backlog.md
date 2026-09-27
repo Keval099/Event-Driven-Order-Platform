@@ -139,7 +139,7 @@ OrderQueue
 - [x] Update order to `PROCESSING`
 - [x] Update order to `COMPLETED`
 - [x] Verify successful end-to-end processing
-- [ ] Add controlled processing failure test
+- [x] Add controlled processing failure test
 
 **Verified flow:**
 
@@ -163,23 +163,51 @@ DynamoDB — PROCESSING
 DynamoDB — COMPLETED
 ```
 
-**Status:** COMPLETE for successful processing; failure testing remains.
+**Status:** COMPLETE — successful processing and controlled failure testing verified.
 
 ---
 
 ## Phase 6 — DLQ & Failure Recovery
 
-- [ ] Implement intentional failure condition for testing
+- [x] Implement intentional failure condition for testing
 - [x] Configure SQS retries through redrive policy
-- [ ] Verify failed messages are retried
-- [ ] Verify message reaches DLQ after maximum receives
-- [ ] Create CloudWatch alarm for DLQ messages
-- [ ] Fix the processing failure
-- [ ] Replay/reprocess the failed message
-- [ ] Verify recovered order reaches `COMPLETED`
-- [ ] Document failure and recovery sequence
+- [x] Verify failed messages are retried
+- [x] Verify message reaches DLQ after maximum receives
+- [x] Create CloudWatch alarm for DLQ messages
+- [x] Fix the processing failure
+- [x] Replay/reprocess the failed message
+- [x] Verify recovered order reaches `COMPLETED`
+- [x] Verify DLQ returns to zero after recovery
+- [x] Verify CloudWatch alarm returns to `OK`
+- [x] Document failure and recovery sequence
 
-**Status:** NEXT
+**Observed test:**
+
+```text
+Processor failure
+      ↓
+SQS receive count 1
+      ↓
+SQS receive count 2
+      ↓
+SQS receive count 3
+      ↓
+DLQ
+      ↓
+CloudWatch ALARM
+      ↓
+Processor fixed/redeployed
+      ↓
+DLQ redrive
+      ↓
+PROCESSING → COMPLETED
+      ↓
+DLQ = 0
+      ↓
+CloudWatch OK
+```
+
+**Status:** COMPLETE
 
 ---
 
@@ -297,14 +325,14 @@ Order Completed
 - [ ] Monitor Lambda errors
 - [ ] Monitor Lambda duration
 - [ ] Monitor SQS messages
-- [ ] Monitor DLQ messages
+- [x] Monitor DLQ messages
 - [ ] Create CloudWatch dashboard
 - [ ] Create Lambda error alarm
-- [ ] Create DLQ alarm
+- [x] Create DLQ alarm
 - [ ] Create API failure alarm where appropriate
-- [ ] Document operational signals
+- [x] Document DLQ alarm signal and recovery behavior
 
-**Status:** IN PROGRESS
+**Status:** IN PROGRESS — dashboard and broader operational alarms remain.
 
 ---
 
@@ -343,15 +371,17 @@ Order Completed
 ## Phase 14 — Reliability Testing
 
 - [ ] Test duplicate message/event behavior
-- [ ] Test Lambda failure
-- [ ] Test SQS retry behavior
-- [ ] Test DLQ behavior
+- [x] Test Lambda failure
+- [x] Test SQS retry behavior
+- [x] Test DLQ behavior
 - [ ] Test Step Functions failure path
-- [ ] Test recovery
-- [ ] Verify data remains consistent
-- [ ] Document observed behavior
+- [x] Test recovery
+- [x] Verify recovered order reaches `COMPLETED`
+- [x] Verify DLQ returns to zero
+- [x] Verify CloudWatch alarm returns to `OK`
+- [x] Document observed behavior
 
-**Status:** NEXT after DLQ implementation test.
+**Status:** IN PROGRESS — duplicate-event testing and Step Functions failure testing remain.
 
 ---
 
@@ -362,7 +392,7 @@ Order Completed
 - [x] AWS service explanation
 - [x] Event flow explanation
 - [x] Order lifecycle documentation
-- [ ] Failure/recovery diagram
+- [x] Failure/recovery sequence documented
 - [x] IAM/security explanation started
 - [ ] Terraform explanation
 - [ ] CI/CD explanation
@@ -384,9 +414,10 @@ Order Completed
 - [ ] DynamoDB order
 - [ ] EventBridge V2 routing
 - [ ] SQS queue
-- [ ] Order Processor logs
-- [ ] DLQ failure
-- [ ] CloudWatch alarm
+- [x] Order Processor failure logs
+- [x] SQS retry evidence
+- [x] DLQ failure evidence
+- [x] CloudWatch alarm in `ALARM`
 - [ ] Step Functions workflow
 - [ ] IAM least-privilege evidence
 - [ ] Terraform plan
@@ -406,10 +437,10 @@ Order Completed
 - [x] `OrderCreated` events are published
 - [x] Events are processed asynchronously through SQS
 - [x] Processing updates order state
-- [ ] Failed messages are retried and verified
-- [ ] Failed messages reach the DLQ
-- [ ] CloudWatch detects the DLQ condition
-- [ ] Failed orders can be recovered/reprocessed
+- [x] Failed messages are retried and verified
+- [x] Failed messages reach the DLQ
+- [x] CloudWatch detects the DLQ condition
+- [x] Failed orders can be recovered/reprocessed
 - [ ] Step Functions demonstrates workflow orchestration
 - [x] Current Lambda workloads follow least privilege
 - [ ] Infrastructure is managed through Terraform
@@ -417,9 +448,9 @@ Order Completed
 - [ ] GitHub uses OIDC instead of static AWS credentials
 - [ ] CloudWatch provides dashboards, metrics, and alarms
 - [ ] Automated unit, integration, and end-to-end tests pass
-- [ ] Failure scenarios have been deliberately tested
+- [x] Failure scenarios have been deliberately tested
 - [x] README and architecture documentation are being maintained
-- [ ] Portfolio evidence has been collected
+- [ ] Portfolio evidence has been fully collected
 
 ---
 
@@ -427,6 +458,6 @@ Order Completed
 
 **Serverless Architecture + Event-Driven Design + Asynchronous Processing + Reliability + Security + Infrastructure as Code + CI/CD + Observability**
 
-**Current milestone:** Core API → EventBridge V2 → SQS → Processor → DynamoDB flow is working and the successful `COMPLETED` lifecycle has been verified.
+**Current milestone:** Core API → EventBridge V2 → SQS → Processor → DynamoDB flow is working, the successful `COMPLETED` lifecycle is verified, and the controlled failure → retry → DLQ → alarm → recovery path is also verified.
 
-**Next recommended stage:** Controlled processor failure → SQS retries → DLQ → CloudWatch alarm → recovery.
+**Next recommended stage:** Idempotency and duplicate-event handling using the existing `eventId`.
