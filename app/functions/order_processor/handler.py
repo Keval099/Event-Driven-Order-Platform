@@ -22,7 +22,14 @@ def lambda_handler(event, context):
     print(json.dumps(event, indent=2))
 
     for record in event["Records"]:
-        sqs_body = json.loads(record["body"])
+        body = record["body"]
+
+        if body.startswith("\ufeff"):
+            body = body.removeprefix("\ufeff")
+        elif body.startswith("ï»¿"):
+            body = body.removeprefix("ï»¿")
+
+        sqs_body = json.loads(body)
 
         detail = sqs_body["detail"]
         order_data = detail["data"]
