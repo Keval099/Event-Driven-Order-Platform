@@ -45,12 +45,14 @@ jobs:
             -t terraform/build/order-api-package
 
           mkdir -p terraform/build/order-api-package/functions/order_api
+
           cp app/functions/order_api/handler.py \
             terraform/build/order-api-package/functions/order_api/handler.py
 
-          cd terraform/build/order-api-package
-          zip -r ../order-api.zip .
-          cd ../../../..
+          (
+            cd terraform/build/order-api-package
+            zip -r ../order-api.zip .
+          )
 
           # Order Processor package
           mkdir -p terraform/build/order-processor-package/functions/order_processor
@@ -58,9 +60,10 @@ jobs:
           cp app/functions/order_processor/handler.py \
             terraform/build/order-processor-package/functions/order_processor/handler.py
 
-          cd terraform/build/order-processor-package
-          zip -r ../order-processor.zip .
-          cd ../../../..
+          (
+            cd terraform/build/order-processor-package
+            zip -r ../order-processor.zip .
+          )
 
           # Order Worker package
           mkdir -p terraform/build/order-worker-package/functions/order_worker
@@ -68,9 +71,10 @@ jobs:
           cp app/functions/order_worker/handler.py \
             terraform/build/order-worker-package/functions/order_worker/handler.py
 
-          cd terraform/build/order-worker-package
-          zip -r ../order-worker.zip .
-          cd ../../../..
+          (
+            cd terraform/build/order-worker-package
+            zip -r ../order-worker.zip .
+          )
 
       - name: Verify Lambda deployment packages
         run: |
