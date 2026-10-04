@@ -37,6 +37,10 @@ def lambda_handler(event, context):
         print("Order ID:", order_id)
         print("Customer ID:", customer_id)
 
+        if customer_id == "CUST-FAIL-TEST":
+            print("INTENTIONAL FAILURE: SQS retry/DLQ test")
+            raise Exception("Intentional failure for SQS retry/DLQ testing")
+
         workflow_input = {
             "eventId": event_id,
             "orderId": order_id,
