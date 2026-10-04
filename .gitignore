@@ -26,3 +26,7 @@ lambda-package/
 processor-package/
 order-api.zip
 order-processor.zip
+
+# Local AWS IAM policy documents
+github-actions-trust-policy.json
+github-actions-deployment-policy.json
