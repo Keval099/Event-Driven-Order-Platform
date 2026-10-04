@@ -34,6 +34,53 @@ jobs:
         run: |
           python -m pytest tests/unit -v
 
+      - name: Build Lambda deployment packages — create Terraform artifacts
+        run: |
+          rm -rf terraform/build
+          mkdir -p terraform/build
+
+          # Order API package
+          mkdir -p terraform/build/order-api-package
+          pip install -r app/requirements.txt \
+            -t terraform/build/order-api-package
+
+          mkdir -p terraform/build/order-api-package/functions/order_api
+          cp app/functions/order_api/handler.py \
+            terraform/build/order-api-package/functions/order_api/handler.py
+
+          cd terraform/build/order-api-package
+          zip -r ../order-api.zip .
+          cd ../../../..
+
+          # Order Processor package
+          mkdir -p terraform/build/order-processor-package/functions/order_processor
+
+          cp app/functions/order_processor/handler.py \
+            terraform/build/order-processor-package/functions/order_processor/handler.py
+
+          cd terraform/build/order-processor-package
+          zip -r ../order-processor.zip .
+          cd ../../../..
+
+          # Order Worker package
+          mkdir -p terraform/build/order-worker-package/functions/order_worker
+
+          cp app/functions/order_worker/handler.py \
+            terraform/build/order-worker-package/functions/order_worker/handler.py
+
+          cd terraform/build/order-worker-package
+          zip -r ../order-worker.zip .
+          cd ../../../..
+
+      - name: Verify Lambda deployment packages
+        run: |
+          test -f terraform/build/order-api.zip
+          test -f terraform/build/order-processor.zip
+          test -f terraform/build/order-worker.zip
+
+          echo "Lambda deployment packages created successfully:"
+          ls -lh terraform/build/*.zip
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
