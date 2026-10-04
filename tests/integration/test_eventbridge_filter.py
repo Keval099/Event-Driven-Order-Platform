@@ -6,7 +6,7 @@ import boto3
 
 
 AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
-AWS_PROFILE = os.getenv("AWS_PROFILE", "ecr-lab")
+AWS_PROFILE = os.getenv("AWS_PROFILE")
 
 EVENT_BUS_NAME = os.getenv(
     "EVENT_BUS_NAME",
@@ -21,8 +21,23 @@ SQS_QUEUE_URL = os.getenv(
 
 
 def get_aws_session():
+    """
+    Create an AWS session using the local AWS profile when provided.
+
+    Local:
+        AWS_PROFILE=ecr-lab
+
+    GitHub Actions:
+        AWS_PROFILE is not set, so boto3 uses the default credential
+        chain populated by GitHub Actions OIDC.
+    """
+    if AWS_PROFILE:
+        return boto3.Session(
+            profile_name=AWS_PROFILE,
+            region_name=AWS_REGION
+        )
+
     return boto3.Session(
-        profile_name=AWS_PROFILE,
         region_name=AWS_REGION
     )
 

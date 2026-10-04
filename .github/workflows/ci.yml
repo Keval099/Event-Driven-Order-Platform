@@ -23,7 +23,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials — authenticate with GitHub OIDC
+      - name: Configure AWS credentials - authenticate with GitHub OIDC
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -41,47 +41,33 @@ jobs:
           pip install -r app/requirements.txt
           pip install pytest
 
-      - name: Run unit tests — validate API, processor, and worker logic
+      - name: Run unit tests - validate API, processor, and worker logic
         run: |
           python -m pytest tests/unit -v
 
-      - name: Build Lambda deployment packages — create Terraform artifacts
+      - name: Build Lambda deployment packages - create Terraform artifacts
         run: |
           rm -rf terraform/build
           mkdir -p terraform/build
 
-          # Order API package
           mkdir -p terraform/build/order-api-package
-          pip install -r app/requirements.txt \
-            -t terraform/build/order-api-package
-
+          pip install -r app/requirements.txt -t terraform/build/order-api-package
           mkdir -p terraform/build/order-api-package/functions/order_api
-
-          cp app/functions/order_api/handler.py \
-            terraform/build/order-api-package/functions/order_api/handler.py
-
+          cp app/functions/order_api/handler.py terraform/build/order-api-package/functions/order_api/handler.py
           (
             cd terraform/build/order-api-package
             zip -r ../order-api.zip .
           )
 
-          # Order Processor package
           mkdir -p terraform/build/order-processor-package/functions/order_processor
-
-          cp app/functions/order_processor/handler.py \
-            terraform/build/order-processor-package/functions/order_processor/handler.py
-
+          cp app/functions/order_processor/handler.py terraform/build/order-processor-package/functions/order_processor/handler.py
           (
             cd terraform/build/order-processor-package
             zip -r ../order-processor.zip .
           )
 
-          # Order Worker package
           mkdir -p terraform/build/order-worker-package/functions/order_worker
-
-          cp app/functions/order_worker/handler.py \
-            terraform/build/order-worker-package/functions/order_worker/handler.py
-
+          cp app/functions/order_worker/handler.py terraform/build/order-worker-package/functions/order_worker/handler.py
           (
             cd terraform/build/order-worker-package
             zip -r ../order-worker.zip .
@@ -92,7 +78,6 @@ jobs:
           test -f terraform/build/order-api.zip
           test -f terraform/build/order-processor.zip
           test -f terraform/build/order-worker.zip
-
           echo "Lambda deployment packages created successfully:"
           ls -lh terraform/build/*.zip
 
@@ -103,10 +88,15 @@ jobs:
         run: |
           terraform fmt -check -recursive terraform
 
-      - name: Initialize Terraform — validation only
+      - name: Initialize Terraform - validation only
         run: |
           terraform -chdir=terraform init -backend=false
 
       - name: Validate Terraform configuration
         run: |
           terraform -chdir=terraform validate
+
+      - name: Run integration tests - validate deployed AWS architecture
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          python -m pytest tests/integration -v
