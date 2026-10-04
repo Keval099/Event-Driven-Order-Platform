@@ -78,6 +78,7 @@ jobs:
           test -f terraform/build/order-api.zip
           test -f terraform/build/order-processor.zip
           test -f terraform/build/order-worker.zip
+
           echo "Lambda deployment packages created successfully:"
           ls -lh terraform/build/*.zip
 
@@ -95,6 +96,24 @@ jobs:
       - name: Validate Terraform configuration
         run: |
           terraform -chdir=terraform validate
+
+      - name: Deploy Lambda application code
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          aws lambda update-function-code \
+            --function-name EventDrivenOrderPlatform-OrderApi \
+            --zip-file fileb://terraform/build/order-api.zip \
+            --region ap-south-1
+
+          aws lambda update-function-code \
+            --function-name EventDrivenOrderPlatform-OrderProcessor \
+            --zip-file fileb://terraform/build/order-processor.zip \
+            --region ap-south-1
+
+          aws lambda update-function-code \
+            --function-name EventDrivenOrderPlatform-OrderWorker \
+            --zip-file fileb://terraform/build/order-worker.zip \
+            --region ap-south-1
 
       - name: Run integration tests - validate deployed AWS architecture
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

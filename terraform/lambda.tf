@@ -18,6 +18,12 @@ resource "aws_lambda_function" "order_api" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [
+      filename,
+      source_code_hash
+    ]
+  }
 
   tags = {
     Project     = var.project_name
@@ -48,6 +54,13 @@ resource "aws_lambda_function" "order_processor" {
       PROCESSED_EVENTS_TABLE_NAME = aws_dynamodb_table.processed_order_events.name
       STATE_MACHINE_ARN           = aws_sfn_state_machine.order_workflow.arn
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      filename,
+      source_code_hash
+    ]
   }
 
   tags = {
@@ -89,6 +102,13 @@ resource "aws_lambda_function" "order_worker" {
     variables = {
       ORDERS_TABLE_NAME = aws_dynamodb_table.orders.name
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      filename,
+      source_code_hash
+    ]
   }
 
   tags = {
