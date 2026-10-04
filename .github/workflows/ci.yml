@@ -11,6 +11,10 @@ jobs:
     name: CI Checks
     runs-on: ubuntu-latest
 
+    permissions:
+      id-token: write
+      contents: read
+
     env:
       AWS_REGION: ap-south-1
       AWS_DEFAULT_REGION: ap-south-1
@@ -18,6 +22,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Configure AWS credentials — authenticate with GitHub OIDC
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::825765413460:role/GitHubActions-EventDrivenOrderPlatform
+          aws-region: ap-south-1
 
       - name: Set up Python
         uses: actions/setup-python@v5
