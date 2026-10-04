@@ -30,6 +30,6 @@ jobs:
           pip install -r app/requirements.txt
           pip install pytest
 
-      - name: Run unit tests
+      - name: Run unit tests — validate API, processor, and worker logic
         run: |
           python -m pytest tests/unit -v
