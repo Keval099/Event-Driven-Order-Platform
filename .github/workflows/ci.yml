@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Unit Tests
+    name: CI Checks
     runs-on: ubuntu-latest
 
     env:
@@ -33,3 +33,18 @@ jobs:
       - name: Run unit tests — validate API, processor, and worker logic
         run: |
           python -m pytest tests/unit -v
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Check Terraform formatting
+        run: |
+          terraform fmt -check -recursive terraform
+
+      - name: Initialize Terraform — validation only
+        run: |
+          terraform -chdir=terraform init -backend=false
+
+      - name: Validate Terraform configuration
+        run: |
+          terraform -chdir=terraform validate
