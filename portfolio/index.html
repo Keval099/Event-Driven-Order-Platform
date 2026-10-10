@@ -26,18 +26,7 @@ html{scroll-padding-top:82px}.scroll-progress{position:fixed;top:0;left:0;height
 @media(max-width:900px){.evidence-grid.visual-evidence{grid-template-columns:1fr 1fr}.proof-strip{grid-template-columns:1fr 1fr}.flow-line{min-width:10px}.arch-live .arch-flow{gap:5px}}
 @media(max-width:560px){.evidence-grid.visual-evidence{grid-template-columns:1fr}.proof-strip{grid-template-columns:1fr 1fr}.lightbox{padding:10px}.flow-line{display:none}.arch-live .arch-flow{display:grid;grid-template-columns:1fr 1fr}.failure-loop{gap:5px}}
 
-/* Responsive architecture infographic */
-.architecture-diagram-card{margin-top:22px;padding:clamp(16px,2.4vw,26px);overflow:hidden}
-.architecture-diagram-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:16px}
-.architecture-diagram-head h3{margin:0 0 7px;font-size:clamp(1.05rem,2vw,1.35rem)}
-.architecture-diagram-head p{margin:0;max-width:720px;opacity:.78;line-height:1.6}
-.architecture-diagram-link{display:inline-flex;align-items:center;gap:8px;flex-shrink:0;padding:9px 12px;border:1px solid var(--line,rgba(255,255,255,.18));border-radius:10px;text-decoration:none;font-weight:650;white-space:nowrap}
-.architecture-diagram-image-wrap{width:min(100%,980px);margin-inline:auto;border:1px solid var(--line,rgba(255,255,255,.14));border-radius:14px;overflow:hidden;background:#fff}
-.architecture-diagram-image{display:block;width:100%;height:auto;max-height:660px;object-fit:contain;object-position:center}
-.architecture-diagram-caption{margin:12px 0 0;font-size:.88rem;line-height:1.55;opacity:.72}
-@media(max-width:640px){.architecture-diagram-head{flex-direction:column;align-items:stretch}.architecture-diagram-link{align-self:flex-start}.architecture-diagram-card{padding:14px}}
-
-</style>
+/* Architecture infographic: align the card to the section container and let the image use the full card width. */ .architecture-diagram-card{margin-top:22px;padding:0;overflow:hidden;width:100%;min-width:0} .architecture-diagram-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px;padding:24px 26px 0} .architecture-diagram-head h3{margin:0 0 7px;font-size:clamp(1.05rem,2vw,1.35rem)} .architecture-diagram-head p{margin:0;max-width:720px;opacity:.78;line-height:1.6} .architecture-diagram-link{display:inline-flex;align-items:center;gap:8px;flex-shrink:0;padding:9px 12px;border:1px solid var(--line,rgba(255,255,255,.18));border-radius:10px;text-decoration:none;font-weight:650;white-space:nowrap} .architecture-diagram-image-wrap{display:block;width:100%;max-width:none;margin:0;border-top:1px solid var(--line,rgba(255,255,255,.14));border-bottom:1px solid var(--line,rgba(255,255,255,.14));overflow:hidden;background:#fff} .architecture-diagram-image{display:block;width:100%;max-width:100%;height:auto;max-height:620px;object-fit:contain;object-position:center;margin:0} .architecture-diagram-caption{margin:0;padding:14px 26px 24px;font-size:.88rem;line-height:1.55;opacity:.72} @media(max-width:640px){.architecture-diagram-head{flex-direction:column;align-items:stretch;padding:18px 16px 0}.architecture-diagram-link{align-self:flex-start}.architecture-diagram-caption{padding:12px 16px 18px}} </style>
 </head>
 <body>
 <nav><div class="container nav-inner"><a class="brand" href="../index.html"><span class="brand-mark">KL</span><span>Keval Lad<small>Cloud • DevOps • AWS</small></span></a><div class="nav-links"><a href="#home" class="active">Home</a><a href="#project">Project</a><a href="#architecture">Architecture</a><a href="#reliability">Reliability</a><a href="#stack">Tech Stack</a><a href="#evidence">Evidence</a><a href="#contact">Contact</a></div><div class="nav-actions"><a class="nav-btn" href="https://github.com/Keval099/Event-Driven-Order-Platform" target="_blank">GitHub</a><a class="nav-btn" href="../index.html">Portfolio</a><button class="menu-btn" id="menuBtn">☰</button></div></div></nav>
